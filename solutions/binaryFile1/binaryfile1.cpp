@@ -1,6 +1,13 @@
+/**
+ * @file binaryfile1.cpp
+ * @brief Beispielcode zum Speichern und Lesen von Strings in Binärdateien.
+ * @date 16.02.2024
+ * @author Qualidy GmbH
+ */
 #include <fstream>
 #include <iostream>
 #include <vector>
+
 
 struct Person {
   std::string vorname;
@@ -16,16 +23,23 @@ int main() {
   persons.push_back(Person{"Thomas", "Leiter"});
   persons.push_back(Person{"Stefan", "Gelhorn"});
 
+  // Optionales öffnen eines Scopes/Gültigkeitsbereichs ... Wegen 1)
+  {
   // Es wird ein Outputstream angelegt und der binary-Modus angegeben.
   std::ofstream fileOutput("binaryFile.txt", std::ios::binary);
 
   // Der Outputstream wird der Methode write_to_binary_stream übergeben.
   persons[0].write_to_binary_stream(fileOutput);
 
-  fileOutput.close(); // Datei muss geschlossen werden, damit der Input wieder
-                      // öffnen kann.
-
+  /* 1) Datei muss geschlossen sein, damit ein anderer Stream ihn wieder öffnen kann.
+     Dies geschieht entweder ...
+  */// ... manuell mit 
+  fileOutput.close();
+  } // ... oder automatisch, wenn das Stream-Objekt out of scope gerät. 
+  
   std::ifstream fileInput("binaryFile.txt", std::ios::binary);
+  
+  // wir überschreiben das zweite Vektor-Element -- Stefan Gelhorn -- mit den Strings der ersten gespeicherten Person in der Datei (Thomas Leiter).
   persons[1].read_form_binary_stream(fileInput);
 
   std::cout << persons[1].vorname << ' ' << persons[1].nachname << '\n';
@@ -34,7 +48,7 @@ int main() {
 }
 
 void Person::write_to_binary_stream(std::ostream &bos) const {
-    int stringlength = vorname.size(); // 1. Schritt:in der int-Variablen stringlength speichern wir die Länge des binär zu speichernden Strings.
+    int stringlength = vorname.size(); // 1. Schritt: in der int-Variablen stringlength speichern wir die Länge des binär zu speichernden Strings.
     auto slp = reinterpret_cast<char *>(&stringlength); // slp = stringlengthpointer: 
     // mit dem reinterpret_cast zu char* halten wir fest, dass nun Byteweise gelesen werden soll. Worauf der Pointer stößt, das soll als char-Buffer interpretiert werden. 
     // Und weil es ein Pointer ist, brauchen wir eine Adresse. Der Pointer soll auf die Adresse der in die Datei zu schreibenden Stringlänge zeigen
@@ -68,14 +82,19 @@ void Person::write_to_binary_stream(std::ostream &bos) const {
 
 void Person::read_form_binary_stream(std::istream &bis) 
 {
-    int stringlength = 0;
-    auto slp = reinterpret_cast<char *>(&stringlength); // slp = stringlengthpointer
+    int stringlength = 0; // darin speichern wir String-Längen für Vor- und Nachnamen.
+    auto slp = reinterpret_cast<char *>(&stringlength); // Zeiger auf die Adresse für die read-Funktion
     bis.read(slp, sizeof(stringlength));
+    // Könnte man auch so schreiben:
+    // bis.read((char*)&stringlength, sizeof(stringlength)); // C++ geht dann verschiedene casts durch und wendet den ersten an, der Funktioniert. Da es sich hier um neuinterpretation/Typumwandlung von gelesenen char* nach int handelt, trifft reinterpret_cast<char *> automatisch zu.
+    
+    // Hier lesen wir dann die Anzahl chars in den Buffer und weisen dem Vornamen dann den buffer zu.
     char buffer_vorname[stringlength + 1];
     bis.read(buffer_vorname, stringlength);
     buffer_vorname[stringlength] = '\0';
     vorname = buffer_vorname;
-
+    
+    // Selbe Schritte wie oben für Nachnamen 
     stringlength = 0;
     slp = reinterpret_cast<char *>(&stringlength);
     bis.read(slp, sizeof(stringlength));
