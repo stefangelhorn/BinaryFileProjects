@@ -1,16 +1,13 @@
 /**
  * @file binaryfile1.cpp
- * @brief Beispielcode mit globalen Funktionen zum Speichern und Lesen von Strings in Binärdateien.
+ * @brief Beispielcode zum Speichern und Lesen von einer eigenen Datenstruktur mit Strings in eine Binärdatei.
  * @date 15.02.2024 – 17.02.2024
  * @author Qualidy GmbH
  * 
- * /// Sind Erklärungen hinter Code um diesen zu erklären
- * // Sind Erklärungen, die dem Code voran gehen.
- * /* Leitet optionalen Code samt Erklärungen dazu innerhalb dessen ein.
- * /** In solchen Blöcken stehen Zusammenfassungen Funktionen und Klassen.
  */
 #include <fstream>
 #include <iostream>
+
 /**
  * Templatefunktion um beliebige Datentypen binär zu speichern.
  */
@@ -91,7 +88,11 @@ struct Book {
      */
   void read_from_binary(const std::string &filename);
 };
-
+/**
+ * Memberfunktion um das gesamte Objekt in eine Binärdatei zu speichern.
+ * 
+ * Nutzt dazu die globalen Funktionen für einzelne Member.
+ */
 void Book::write_to_binary(const std::string &filename) const {
   std::ofstream file(filename, std::ios::binary);
 
@@ -116,6 +117,11 @@ void Book::write_to_binary(const std::string &filename) const {
   write_obj_binary(price, file);
 }
 
+/**
+ * Memberfunktion um das gesamte Objekt wieder aus der Binärdatei heraus zu lesen.
+ * 
+ * Nutzt dazu die globalen Funktionen für einzelne Member.
+ */
 void Book::read_from_binary(const std::string &filename) {
   std::ifstream file(filename, std::ios::binary);
 
